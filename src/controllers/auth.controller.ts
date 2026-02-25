@@ -1,4 +1,5 @@
 import express from 'express';
+import User from '../models/User.ts';
 import {
   exchangeCodeForTokens,
   fetchGoogleUser,
@@ -19,7 +20,18 @@ export const googleCallback = async (req: express.Request, res: express.Response
     const tokens = await exchangeCodeForTokens(code);
     const user = await fetchGoogleUser(tokens.access_token);
 
-    // TODO: Store user profile in database
+    const existingUser = await User.findOne({ userId: user.id });
+    if (!existingUser) {
+      const newUser = new User({
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        photo_url: user.picture,
+        provider: 'google',
+        verified_email: user.verified_email,
+      });
+      await newUser.save();
+    }
 
     req.session.userSession = { userId: user.id };
     res.redirect(process.env.CLIENT_REDIRECT_URL!);
