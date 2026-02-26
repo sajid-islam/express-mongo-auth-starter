@@ -47,3 +47,14 @@ export const googleCallback = async (req: express.Request, res: express.Response
     res.status(500).json({ message: 'Failed To Google Login, Try Again' });
   }
 };
+
+export const logout = async (req: express.Request, res: express.Response) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.log('Error while logout user: ', err);
+      res.status(500).json({ message: 'Failed to logout, try again' });
+    }
+    res.clearCookie('sid');
+    return res.status(200).json({ message: 'Logout successfully!' });
+  });
+};
