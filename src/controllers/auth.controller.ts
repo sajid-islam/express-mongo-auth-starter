@@ -43,6 +43,7 @@ export const googleCallback = async (req: express.Request, res: express.Response
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.redirect(process.env.CLIENT_REDIRECT_URL!);
+    res.status(500).json({ message: 'Failed To Google Login, Try Again' });
   }
 };

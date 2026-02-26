@@ -7,10 +7,12 @@ export const getUser = async (req: express.Request, res: express.Response) => {
     const user = await User.findOne({ userId: userId! });
 
     if (!user) {
-      req.session.destroy((err) => {
+      return req.session.destroy((err) => {
         if (err) {
-          console.log('Error on deleting session: ', err);
+          console.log(err);
+          return res.status(500).json({ message: 'Session destroy error' });
         }
+
         res.clearCookie('sid');
         return res.status(404).json({ message: 'User Not Found' });
       });
