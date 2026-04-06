@@ -5,6 +5,7 @@ import express from 'express';
 import session from 'express-session';
 import { connectDB } from './config/db.ts';
 import authRoutes from './routes/auth.routes.ts';
+import blogRoutes from './routes/blog.routes.ts';
 import userRoutes from './routes/user.routes.ts';
 
 configDotenv();
@@ -39,6 +40,7 @@ const port = process.env.PORT || 3000;
 // Routes
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
+app.use('/blogs', blogRoutes);
 
 app.get('/', (req, res) => {
   res.send("Yeooo! Man i'm working ");
