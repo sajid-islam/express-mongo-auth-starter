@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     userId: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    role: { type: String, enum: ['super_admin', 'admin', 'user'], default: 'user' },
+    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
     phone: { type: String },
     photo_url: { type: String },
     isActive: { type: Boolean, default: true },
