@@ -1,4 +1,6 @@
+import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import type { IUser } from '../types/user.type.ts';
 
 const socialLinkSchema = new mongoose.Schema({
   platform: { type: String, required: true },
@@ -6,12 +8,13 @@ const socialLinkSchema = new mongoose.Schema({
 });
 
 // User Schema == MAIN ==
-const userSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema<IUser>(
   {
     userId: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
+    password: { type: String },
+    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
     phone: { type: String },
     photo_url: { type: String },
     isActive: { type: Boolean, default: true },
@@ -21,6 +24,16 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+userSchema.pre('save' as any, async function () {
+  if (!this.isModified('password')) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password as string, salt);
+});
+
+userSchema.methods.comparePassword = async function (userPassword: string) {
+  return await bcrypt.compare(userPassword, this.password);
+};
 
 const User = mongoose.model('User', userSchema);
 

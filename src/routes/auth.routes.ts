@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+  emailLogin,
+  emailRegister,
   githubCallback,
   githubLogin,
   googleCallback,
@@ -13,6 +15,8 @@ router.get('/google', googleLogin);
 router.get('/google/callback', googleCallback);
 router.get('/github', githubLogin);
 router.get('/github/callback', githubCallback);
+router.get('/register', emailRegister);
+router.get('/login', emailLogin);
 router.post('/logout', isAuthenticated, logout);
 
 export default router;

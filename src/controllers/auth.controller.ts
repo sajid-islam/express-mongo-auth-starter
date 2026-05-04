@@ -1,4 +1,5 @@
 import express from 'express';
+import { nanoid } from 'nanoid';
 import User from '../models/User.ts';
 import {
   exchangeGithubCodeForTokens,
@@ -102,6 +103,124 @@ export const githubCallback = async (req: express.Request, res: express.Response
   } catch (error) {
     console.log('Error while github callback', error);
     return res.redirect(`${process.env.CLIENT_REDIRECT_URL}?error=github_login_failed`);
+  }
+};
+
+export const emailRegister = async (req: express.Request, res: express.Response) => {
+  try {
+    const { name, email, password, confirmPassword } = req.body;
+    if (!name || !email || !password || !confirmPassword) {
+      return res.status(400).json({ success: false, message: 'All field are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Confirm password not matched' });
+    }
+
+    const existingUser = await User.findOne({ email: email });
+
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User already exist' });
+    }
+
+    const userId = nanoid();
+
+    const newUser = new User({
+      name,
+      email,
+      password,
+      userId,
+      provider: 'email',
+    });
+
+    await newUser.save();
+
+    req.session.userSession = { userId };
+    req.session.save((err) => {
+      if (err) {
+        console.log('Session Error: ', err);
+        res.status(500).json({ success: false, message: 'Session not saved, Try again' });
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Registration successful',
+        user: {
+          name: newUser.name,
+          email: newUser.email,
+          userId: newUser.userId,
+        },
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+export const emailLogin = async (req: express.Request, res: express.Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required',
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (user.provider !== 'email') {
+      return res.status(400).json({
+        success: false,
+        message: 'Please login using your provider',
+      });
+    }
+
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    req.session.userSession = {
+      userId: user.userId,
+    };
+
+    req.session.save((err) => {
+      if (err) {
+        console.log('Session Error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Session not saved, try again',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          name: user.name,
+          email: user.email,
+          userId: user.userId,
+        },
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
   }
 };
 
