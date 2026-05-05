@@ -15,8 +15,8 @@ router.get('/google', googleLogin);
 router.get('/google/callback', googleCallback);
 router.get('/github', githubLogin);
 router.get('/github/callback', githubCallback);
-router.get('/register', emailRegister);
-router.get('/login', emailLogin);
+router.post('/register', emailRegister);
+router.post('/login', emailLogin);
 router.post('/logout', isAuthenticated, logout);
 
 export default router;

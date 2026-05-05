@@ -114,7 +114,7 @@ export const emailRegister = async (req: express.Request, res: express.Response)
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ success: false, message: 'Confirm password not matched' });
+      return res.status(400).json({ success: false, message: 'Passwords do not match' });
     }
 
     const existingUser = await User.findOne({ email: email });
