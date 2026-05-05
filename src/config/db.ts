@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 export const connectDB = async () => {
-  const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@crkatgcluster.6ogfclp.mongodb.net/CrackAnythingDB?appName=CrkAtgCluster`;
+  const uri = `${process.env.MONGODB_URI}`;
 
   try {
     await mongoose.connect(uri);

@@ -21,7 +21,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@crkatgcluster.6ogfclp.mongodb.net/CrackAnythingDB?appName=CrkAtgCluster`,
+      mongoUrl: `${process.env.MONGODB_URI}`,
       ttl: 14 * 24 * 60 * 60,
       collectionName: 'sessions',
     }),
