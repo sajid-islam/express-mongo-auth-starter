@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema<IUser>(
     userId: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    agreedTerms: { type: Boolean, required: true },
     password: { type: String },
     role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
     phone: { type: String },

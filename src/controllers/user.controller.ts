@@ -4,7 +4,7 @@ export const getUser = async (req: express.Request, res: express.Response) => {
   try {
     const userId = req.session.userSession?.userId;
 
-    const user = await User.findOne({ userId: userId! });
+    const user = await User.findOne({ userId: userId! }).select('-password');
 
     if (!user) {
       return req.session.destroy((err) => {

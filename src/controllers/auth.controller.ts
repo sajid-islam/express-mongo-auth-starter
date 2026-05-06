@@ -108,13 +108,19 @@ export const githubCallback = async (req: express.Request, res: express.Response
 
 export const emailRegister = async (req: express.Request, res: express.Response) => {
   try {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, agreedTerms } = req.body;
     if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({ success: false, message: 'All field are required' });
     }
 
     if (password !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
+    }
+
+    if (!agreedTerms) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Please agree to the terms and conditions' });
     }
 
     const existingUser = await User.findOne({ email: email });
@@ -130,6 +136,7 @@ export const emailRegister = async (req: express.Request, res: express.Response)
       email,
       password,
       userId,
+      agreedTerms,
       provider: 'email',
     });
 
