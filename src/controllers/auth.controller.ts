@@ -1,5 +1,6 @@
 import express from 'express';
 import { nanoid } from 'nanoid';
+import { Role } from '../models/Role.ts';
 import User from '../models/User.ts';
 import {
   exchangeGithubCodeForTokens,
@@ -11,6 +12,8 @@ import {
   fetchGoogleUser,
   getGoogleAuthUrl,
 } from '../services/googleOAuth.services.ts';
+
+const defaultRoleValue = 'user';
 
 export const googleLogin = (req: express.Request, res: express.Response) => {
   const url = getGoogleAuthUrl();
@@ -26,7 +29,8 @@ export const googleCallback = async (req: express.Request, res: express.Response
     const tokens = await exchangeCodeForTokens(code);
     const user = await fetchGoogleUser(tokens.access_token);
 
-    const existingUser = await User.findOne({ email: user.email });
+    const existingUser = await User.findOne({ email: user.email }).populate('role');
+    const roleUser = await Role.findOne({ value: 'user' });
     if (existingUser && existingUser?.provider !== 'google') {
       return res.redirect(`${process.env.CLIENT_REDIRECT_URL}?error=provider_mismatch`);
     }
@@ -37,12 +41,15 @@ export const googleCallback = async (req: express.Request, res: express.Response
         email: user.email,
         photo_url: user.picture,
         provider: 'google',
+        role: roleUser?.value,
         verified_email: user.verified_email,
       });
       await newUser.save();
     }
 
-    req.session.userSession = { userId: user.id };
+    const roleDoc = existingUser?.role as any;
+
+    req.session.userSession = { userId: user.id, role: roleDoc?.value || defaultRoleValue };
     req.session.save((err) => {
       if (err) {
         console.log('Session Error: ', err);
@@ -76,7 +83,8 @@ export const githubCallback = async (req: express.Request, res: express.Response
     const tokens = await exchangeGithubCodeForTokens(code);
     const user = await fetchGithubUser(tokens.access_token);
 
-    const existingUser = await User.findOne({ email: user.email });
+    const existingUser = await User.findOne({ email: user.email }).populate('role');
+    const roleUser = await Role.findOne({ value: 'user' });
     if (existingUser && existingUser?.provider !== 'github') {
       return res.redirect(`${process.env.CLIENT_REDIRECT_URL}?error=provider_mismatch`);
     }
@@ -87,11 +95,16 @@ export const githubCallback = async (req: express.Request, res: express.Response
         email: user.email,
         photo_url: user.avatar_url,
         provider: 'github',
+        role: roleUser?._id,
         verified_email: true,
       });
       await newUser.save();
     }
-    req.session.userSession = { userId: user.id };
+    const roleDoc = existingUser?.role as any;
+    req.session.userSession = {
+      userId: user.id,
+      role: roleDoc?.value || defaultRoleValue,
+    };
     req.session.save((err) => {
       if (err) {
         console.log('Session Error: ', err);
@@ -124,6 +137,7 @@ export const emailRegister = async (req: express.Request, res: express.Response)
     }
 
     const existingUser = await User.findOne({ email: email });
+    const roleUser = await Role.findOne({ value: 'user' });
 
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User already exist' });
@@ -137,12 +151,13 @@ export const emailRegister = async (req: express.Request, res: express.Response)
       password,
       userId,
       agreedTerms,
+      role: roleUser?._id,
       provider: 'email',
     });
 
     await newUser.save();
 
-    req.session.userSession = { userId };
+    req.session.userSession = { userId, role: defaultRoleValue };
     req.session.save((err) => {
       if (err) {
         console.log('Session Error: ', err);
@@ -174,7 +189,7 @@ export const emailLogin = async (req: express.Request, res: express.Response) =>
       });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate('role');
 
     if (!user) {
       return res.status(404).json({
@@ -198,9 +213,10 @@ export const emailLogin = async (req: express.Request, res: express.Response) =>
         message: 'Invalid credentials',
       });
     }
-
+    const roleDoc = user.role as any;
     req.session.userSession = {
       userId: user.userId,
+      role: roleDoc.value,
     };
 
     req.session.save((err) => {

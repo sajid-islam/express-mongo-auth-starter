@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema<IUser>(
     email: { type: String, required: true, unique: true },
     agreedTerms: { type: Boolean, required: true },
     password: { type: String },
-    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
+    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
     phone: { type: String },
     photo_url: { type: String },
     isActive: { type: Boolean, default: true },
