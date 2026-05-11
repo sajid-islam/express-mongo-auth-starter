@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { Role } from '../models/Role.ts';
 
-const hasPermission = (permission: string) => {
+const hasPermission = (requiredPermission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const userRole = req.session.userSession?.role;
 
@@ -23,7 +23,7 @@ const hasPermission = (permission: string) => {
 
     const permissions = role.permissions as any[];
 
-    const permitted = permissions.some((p) => p.value === permission);
+    const permitted = permissions.some((p) => p.value === requiredPermission);
 
     if (!permitted) {
       return res.status(403).json({
