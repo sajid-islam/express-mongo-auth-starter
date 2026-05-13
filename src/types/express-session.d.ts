@@ -5,6 +5,7 @@ declare module 'express-session' {
     userSession?: {
       userId: string;
       role: string;
+      priority: number;
     };
   }
 }

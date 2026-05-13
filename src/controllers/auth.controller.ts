@@ -49,7 +49,11 @@ export const googleCallback = async (req: express.Request, res: express.Response
 
     const roleDoc = existingUser?.role as any;
 
-    req.session.userSession = { userId: user.id, role: roleDoc?.value || defaultRoleValue };
+    req.session.userSession = {
+      userId: user.id,
+      role: roleDoc?.value || defaultRoleValue,
+      priority: roleDoc?.priority || 0,
+    };
     req.session.save((err) => {
       if (err) {
         console.log('Session Error: ', err);
@@ -104,6 +108,7 @@ export const githubCallback = async (req: express.Request, res: express.Response
     req.session.userSession = {
       userId: user.id,
       role: roleDoc?.value || defaultRoleValue,
+      priority: roleDoc?.priority || 0,
     };
     req.session.save((err) => {
       if (err) {
@@ -157,7 +162,7 @@ export const emailRegister = async (req: express.Request, res: express.Response)
 
     await newUser.save();
 
-    req.session.userSession = { userId, role: defaultRoleValue };
+    req.session.userSession = { userId, role: defaultRoleValue, priority: 0 };
     req.session.save((err) => {
       if (err) {
         console.log('Session Error: ', err);
@@ -217,6 +222,7 @@ export const emailLogin = async (req: express.Request, res: express.Response) =>
     req.session.userSession = {
       userId: user.userId,
       role: roleDoc.value,
+      priority: roleDoc.priority,
     };
 
     req.session.save((err) => {

@@ -6,8 +6,8 @@ const permissionSchema = new mongoose.Schema({
     unique: true,
     required: true,
     match: [
-      /^[a-z]+:[a-z]+(:[a-z]+)?$/,
-      'Invalid permission format, should be <action>:<resource>:<scope(optional)>',
+      /^[a-z]+:[a-z]+(:(own|any))?$/,
+      'Invalid permission format, should be <action>:<resource>:<scope(own or any, optional)>',
     ],
   },
   name: { type: String, required: true },
