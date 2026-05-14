@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
+import type { IBlog } from '../types/blog.type.ts';
 
-const blogSchema = new mongoose.Schema(
+const blogSchema = new mongoose.Schema<IBlog>(
   {
     title: { type: String, required: true },
     content: { type: String, required: true },

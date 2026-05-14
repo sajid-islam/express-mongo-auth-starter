@@ -4,7 +4,7 @@ import User from '../models/User.ts';
 
 interface HasPermissionOptions {
   requiredPermission: string[];
-  getOwnerId?: (req: Request) => Promise<string | null> | string;
+  targetedUserId?: string | null | ((req: Request) => string | null);
   enforcePriority?: boolean;
 }
 
@@ -47,7 +47,7 @@ const hasPermission = (opts: HasPermissionOptions) => {
 
       const isOwn = opts.requiredPermission.some((p) => p.endsWith(':own'));
 
-      const ownerId = await opts.getOwnerId?.(req);
+      const ownerId = opts.targetedUserId;
 
       // 4. If user does not own the resource, return 403
       if (!ownerId) {

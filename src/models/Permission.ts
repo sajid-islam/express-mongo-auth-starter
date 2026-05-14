@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
+import type { IPermission } from '../types/permission.type.ts';
 
-const permissionSchema = new mongoose.Schema({
+const permissionSchema = new mongoose.Schema<IPermission>({
   value: {
     type: String,
     unique: true,
