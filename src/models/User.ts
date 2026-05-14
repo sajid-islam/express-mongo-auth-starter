@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
-import type { IUser } from '../types/user.type.ts';
+import type { IUser } from '../types/models-type/user.type.ts';
 
 const socialLinkSchema = new mongoose.Schema({
   platform: { type: String, required: true },

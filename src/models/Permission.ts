@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import type { IPermission } from '../types/permission.type.ts';
+import type { IPermission } from '../types/models-type/permission.type.ts';
 
 const permissionSchema = new mongoose.Schema<IPermission>({
   value: {

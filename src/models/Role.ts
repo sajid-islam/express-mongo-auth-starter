@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import type { IRole } from '../types/role.type.ts';
+import type { IRole } from '../types/models-type/role.type.ts';
 
 const roleSchema = new mongoose.Schema<IRole>({
   value: { type: String, unique: true, required: true },
