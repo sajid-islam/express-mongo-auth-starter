@@ -59,7 +59,7 @@ const hasPermission = (opts: HasPermissionOptions) => {
 
       // 5. If user owns the resource, check if user is the owner
       if (isOwn) {
-        if (ownerId !== userSession.userId) {
+        if (ownerId !== userSession._id) {
           return res.status(403).json({
             success: false,
             message: 'Forbidden: you do not own this resource',
@@ -69,7 +69,7 @@ const hasPermission = (opts: HasPermissionOptions) => {
 
       // 6. If enforcePriority is true, check if user has higher priority
       if (opts.enforcePriority) {
-        const targetUser = await User.findOne({ userId: ownerId }).populate('role');
+        const targetUser = await User.findById(ownerId).populate('role');
 
         if (!targetUser) {
           return res.status(403).json({

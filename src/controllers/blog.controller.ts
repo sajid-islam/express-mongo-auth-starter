@@ -7,13 +7,13 @@ import User from '../models/User.ts';
 export const createBlog = async (req: express.Request, res: express.Response) => {
   try {
     const { title, content, tags, image } = req.body;
-    const sessionUserId = req.session.userSession?.userId;
+    const sessionUserId = req.session.userSession?._id;
 
     if (!sessionUserId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const user = await User.findOne({ userId: sessionUserId! });
+    const user = await User.findById(sessionUserId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -79,9 +79,9 @@ export const updateBlog = async (req: express.Request, res: express.Response) =>
   try {
     const { id } = req.params;
     const { title, content, tags, image, isActive } = req.body;
-    const sessionUserId = req.session.userSession?.userId;
+    const sessionUserId = req.session.userSession?._id;
 
-    const user = await User.findOne({ userId: sessionUserId! });
+    const user = await User.findById(sessionUserId!);
     const blog = await Blog.findById(id);
 
     if (!blog) {
@@ -127,9 +127,9 @@ export const updateBlog = async (req: express.Request, res: express.Response) =>
 export const deleteBlog = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    const sessionUserId = req.session.userSession?.userId;
+    const sessionUserId = req.session.userSession?._id;
 
-    const user = await User.findOne({ userId: sessionUserId! });
+    const user = await User.findById(sessionUserId!);
     const blog = await Blog.findById(id);
 
     if (!blog) {

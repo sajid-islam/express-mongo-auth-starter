@@ -7,10 +7,8 @@ const socialLinkSchema = new mongoose.Schema({
   link: { type: String, required: true },
 });
 
-// User Schema == MAIN ==
 const userSchema = new mongoose.Schema<IUser>(
   {
-    userId: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     agreedTerms: { type: Boolean, required: true },

@@ -3,7 +3,7 @@ import 'express-session';
 declare module 'express-session' {
   interface SessionData {
     userSession?: {
-      userId: string;
+      _id: string;
       role: string;
       priority: number;
     };

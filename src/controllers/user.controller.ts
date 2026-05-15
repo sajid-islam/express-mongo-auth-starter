@@ -2,9 +2,9 @@ import express from 'express';
 import User from '../models/User.ts';
 export const getUser = async (req: express.Request, res: express.Response) => {
   try {
-    const userId = req.session.userSession?.userId;
+    const userId = req.session.userSession?._id;
 
-    const user = await User.findOne({ userId: userId! }).select('-password -_id -userId');
+    const user = await User.findById(userId).select('-password');
 
     if (!user) {
       return req.session.destroy((err) => {

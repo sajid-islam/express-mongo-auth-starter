@@ -1,5 +1,4 @@
 import express from 'express';
-import { nanoid } from 'nanoid';
 import { Role } from '../models/Role.ts';
 import User from '../models/User.ts';
 import {
@@ -29,28 +28,31 @@ export const googleCallback = async (req: express.Request, res: express.Response
     const tokens = await exchangeCodeForTokens(code);
     const user = await fetchGoogleUser(tokens.access_token);
 
-    const existingUser = await User.findOne({ email: user.email }).populate('role');
+    let existingUser = await User.findOne({ email: user.email }).populate('role');
     const roleUser = await Role.findOne({ value: 'user' });
+
     if (existingUser && existingUser?.provider !== 'google') {
       return res.redirect(`${process.env.CLIENT_REDIRECT_URL}?error=provider_mismatch`);
     }
+
     if (!existingUser) {
       const newUser = new User({
-        userId: user.id,
         name: user.name,
         email: user.email,
         photo_url: user.picture,
         provider: 'google',
-        role: roleUser?.value,
+        role: roleUser?._id,
         verified_email: user.verified_email,
+        agreedTerms: true,
       });
-      await newUser.save();
+      existingUser = await newUser.save();
+      existingUser = await existingUser.populate('role');
     }
 
-    const roleDoc = existingUser?.role as any;
+    const roleDoc = existingUser.role as any;
 
     req.session.userSession = {
-      userId: user.id,
+      _id: existingUser._id.toString(),
       role: roleDoc?.value || defaultRoleValue,
       priority: roleDoc?.priority || 0,
     };
@@ -87,26 +89,30 @@ export const githubCallback = async (req: express.Request, res: express.Response
     const tokens = await exchangeGithubCodeForTokens(code);
     const user = await fetchGithubUser(tokens.access_token);
 
-    const existingUser = await User.findOne({ email: user.email }).populate('role');
+    let existingUser = await User.findOne({ email: user.email }).populate('role');
     const roleUser = await Role.findOne({ value: 'user' });
+
     if (existingUser && existingUser?.provider !== 'github') {
       return res.redirect(`${process.env.CLIENT_REDIRECT_URL}?error=provider_mismatch`);
     }
+
     if (!existingUser) {
       const newUser = new User({
-        userId: user.id,
         name: user.name,
         email: user.email,
         photo_url: user.avatar_url,
         provider: 'github',
         role: roleUser?._id,
         verified_email: true,
+        agreedTerms: true,
       });
-      await newUser.save();
+      existingUser = await newUser.save();
+      existingUser = await existingUser.populate('role');
     }
-    const roleDoc = existingUser?.role as any;
+
+    const roleDoc = existingUser.role as any;
     req.session.userSession = {
-      userId: user.id,
+      _id: existingUser._id.toString(),
       role: roleDoc?.value || defaultRoleValue,
       priority: roleDoc?.priority || 0,
     };
@@ -148,13 +154,10 @@ export const emailRegister = async (req: express.Request, res: express.Response)
       return res.status(400).json({ success: false, message: 'User already exist' });
     }
 
-    const userId = nanoid();
-
     const newUser = new User({
       name,
       email,
       password,
-      userId,
       agreedTerms,
       role: roleUser?._id,
       provider: 'email',
@@ -162,7 +165,7 @@ export const emailRegister = async (req: express.Request, res: express.Response)
 
     await newUser.save();
 
-    req.session.userSession = { userId, role: defaultRoleValue, priority: 0 };
+    req.session.userSession = { _id: newUser._id.toString(), role: defaultRoleValue, priority: 0 };
     req.session.save((err) => {
       if (err) {
         console.log('Session Error: ', err);
@@ -174,7 +177,6 @@ export const emailRegister = async (req: express.Request, res: express.Response)
         user: {
           name: newUser.name,
           email: newUser.email,
-          userId: newUser.userId,
         },
       });
     });
@@ -220,7 +222,7 @@ export const emailLogin = async (req: express.Request, res: express.Response) =>
     }
     const roleDoc = user.role as any;
     req.session.userSession = {
-      userId: user.userId,
+      _id: user._id.toString(),
       role: roleDoc.value,
       priority: roleDoc.priority,
     };
@@ -240,7 +242,6 @@ export const emailLogin = async (req: express.Request, res: express.Response) =>
         user: {
           name: user.name,
           email: user.email,
-          userId: user.userId,
         },
       });
     });

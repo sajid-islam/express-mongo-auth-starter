@@ -16,7 +16,6 @@ export const seedUsers = async () => {
 
     const users = [
       {
-        userId: 'ID-SUPER-001',
         name: 'Super Admin',
         email: 'superadmin@example.com',
         agreedTerms: true,
@@ -33,7 +32,6 @@ export const seedUsers = async () => {
         verified_email: true,
       },
       {
-        userId: 'ID-ADMIN-001',
         name: 'Admin',
         email: 'admin@example.com',
         agreedTerms: true,
@@ -47,7 +45,6 @@ export const seedUsers = async () => {
         verified_email: true,
       },
       {
-        userId: 'ID-USER-001',
         name: 'User',
         email: 'user@example.com',
         agreedTerms: true,
