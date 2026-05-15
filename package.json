@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.ts",
-    "db:seed": "node src/seeders/db.seeder.ts"
+    "db:seed": "node src/seeders/db.seeder.ts",
+    "custom:seed": "node src/seeders/custom.seeder.ts"
   },
   "keywords": [],
   "author": "",

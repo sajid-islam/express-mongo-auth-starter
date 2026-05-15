@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { Role } from '../models/Role.ts';
 import User from '../models/User.ts';
 
@@ -11,13 +12,15 @@ export const seedUsers = async () => {
 
     const roleMap = Object.fromEntries(role.map((r) => [r.value, r._id]).filter(Boolean));
 
+    const hashPassword = await bcrypt.hash('password', 10);
+
     const users = [
       {
         userId: 'ID-SUPER-001',
         name: 'Super Admin',
         email: 'superadmin@example.com',
         agreedTerms: true,
-        password: 'password',
+        password: hashPassword,
         role: roleMap['super-admin'],
         phone: '+1234567890',
         photo_url: 'https://api.dicebear.com/9.x/shapes/svg?seed=Robert',
@@ -34,7 +37,7 @@ export const seedUsers = async () => {
         name: 'Admin',
         email: 'admin@example.com',
         agreedTerms: true,
-        password: 'password',
+        password: hashPassword,
         role: roleMap['admin'],
         phone: '+1987654321',
         photo_url: 'https://api.dicebear.com/9.x/shapes/svg?seed=Wyatt',
@@ -48,7 +51,7 @@ export const seedUsers = async () => {
         name: 'User',
         email: 'user@example.com',
         agreedTerms: true,
-        password: 'password',
+        password: hashPassword,
         role: roleMap['user'],
         phone: '+1122334455',
         photo_url: 'https://api.dicebear.com/9.x/shapes/svg?seed=Leo',
