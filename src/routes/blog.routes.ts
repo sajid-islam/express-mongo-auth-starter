@@ -23,7 +23,7 @@ router.patch(
   isAuthenticated,
   loadBlog,
   hasPermission({
-    requiredPermission: ['update:blog:any,update:blog:own'],
+    requiredPermission: ['update:blog:any', 'update:blog:own'],
     targetedUserId: (req: express.Request) => req.blog?.author || null,
   }) as any,
   updateBlog,

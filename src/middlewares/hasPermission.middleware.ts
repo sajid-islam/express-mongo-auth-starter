@@ -53,7 +53,7 @@ const hasPermission = (opts: HasPermissionOptions) => {
       if (!ownerId) {
         return res.status(403).json({
           success: false,
-          message: 'Forbidden: insufficient permissions',
+          message: 'Forbidden:  insufficient permissions (Owner not found)',
         });
       }
 

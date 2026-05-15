@@ -4,6 +4,7 @@ import { configDotenv } from 'dotenv';
 import express from 'express';
 import session from 'express-session';
 import { connectDB } from './config/db.ts';
+import './models/index.ts';
 import authRoutes from './routes/auth.routes.ts';
 import blogRoutes from './routes/blog.routes.ts';
 import userRoutes from './routes/user.routes.ts';
