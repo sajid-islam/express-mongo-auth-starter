@@ -79,18 +79,11 @@ export const updateBlog = async (req: express.Request, res: express.Response) =>
   try {
     const { id } = req.params;
     const { title, content, tags, image, isActive } = req.body;
-    const sessionUserId = req.session.userSession?._id;
 
-    const user = await User.findById(sessionUserId!);
     const blog = await Blog.findById(id);
 
     if (!blog) {
       return res.status(404).json({ message: 'Blog not found' });
-    }
-
-    // Check ownership
-    if (blog.author.toString() !== user?._id.toString()) {
-      return res.status(403).json({ message: 'Forbidden: You do not own this blog' });
     }
 
     if (image) {

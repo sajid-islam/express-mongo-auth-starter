@@ -1,10 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 import { Role } from '../models/Role.ts';
 import User from '../models/User.ts';
+import type { IPermission } from '../types/models-type/permission.type.ts';
+import type { IRole } from '../types/models-type/role.type.ts';
 
 interface HasPermissionOptions {
   requiredPermission: string[];
-  targetedUserId?: string | null | ((req: Request) => string | null);
+  targetedUserId?: (req: Request) => string | null;
   enforcePriority?: boolean;
 }
 
@@ -13,7 +15,7 @@ const hasPermission = (opts: HasPermissionOptions) => {
     try {
       const userSession = req.session.userSession;
 
-      // 1. Check if user is authenticated
+      // STEP 1: If no session exists -> user is not authenticated
       if (!userSession) {
         return res.status(401).json({
           success: false,
@@ -21,11 +23,11 @@ const hasPermission = (opts: HasPermissionOptions) => {
         });
       }
 
-      const role = await Role.findOne({
-        value: userSession.role,
-      }).populate('permissions');
+      const role = await Role.findOne({ value: userSession.role }).populate<{
+        permissions: IPermission[];
+      }>('permissions');
 
-      // 2. Check if user has the required permission
+      // STEP 2: If role not found → invalid or missing role
       if (!role) {
         return res.status(403).json({
           success: false,
@@ -33,11 +35,10 @@ const hasPermission = (opts: HasPermissionOptions) => {
         });
       }
 
-      const permissions = role.permissions as any[];
+      // STEP 3: Check whether user has at least one required permission
+      const permitted = role.permissions.some((p) => opts.requiredPermission.includes(p.value));
 
-      const permitted = permissions.some((p) => opts.requiredPermission.includes(p.value));
-
-      // 3. If user does not have the required permission, return 403
+      // STEP 4: If permission missing → deny access
       if (!permitted) {
         return res.status(403).json({
           success: false,
@@ -45,21 +46,34 @@ const hasPermission = (opts: HasPermissionOptions) => {
         });
       }
 
-      const isOwn = opts.requiredPermission.some((p) => p.endsWith(':own'));
+      const matchedPerms = role.permissions.filter((p) =>
+        opts.requiredPermission.includes(p.value),
+      );
 
-      const ownerId = opts.targetedUserId;
+      const hasOwn = matchedPerms.some((p) => p.value.endsWith(':own'));
+      const hasAny = matchedPerms.some((p) => p.value.endsWith(':any'));
 
-      // 4. If user does not own the resource, return 403
-      if (!ownerId) {
-        return res.status(403).json({
-          success: false,
-          message: 'Forbidden:  insufficient permissions (Owner not found)',
-        });
+      // STEP 5:
+      // If user has ":any" permission and priority check is NOT required, allow access immediately
+      if (hasAny && !opts.enforcePriority) {
+        return next();
       }
 
-      // 5. If user owns the resource, check if user is the owner
-      if (isOwn) {
-        if (ownerId !== userSession._id) {
+      const ownerId = opts.targetedUserId?.(req) ?? null;
+
+      // STEP 6:
+      // If permission scope is ":own", ownership must match
+      if (hasOwn && !hasAny) {
+        // Owner ID could not be resolved
+        if (!ownerId) {
+          return res.status(400).json({
+            success: false,
+            message: 'Target resource owner could not be resolved',
+          });
+        }
+
+        // Logged-in user does not own this resource
+        if (ownerId.toString() !== userSession._id.toString()) {
           return res.status(403).json({
             success: false,
             message: 'Forbidden: you do not own this resource',
@@ -67,26 +81,41 @@ const hasPermission = (opts: HasPermissionOptions) => {
         }
       }
 
-      // 6. If enforcePriority is true, check if user has higher priority
+      // STEP 7:
+      // Role priority enforcement
       if (opts.enforcePriority) {
-        const targetUser = await User.findById(ownerId).populate('role');
-
-        if (!targetUser) {
-          return res.status(403).json({
+        // If no target user ID found → cannot compare priority
+        if (!ownerId) {
+          return res.status(400).json({
             success: false,
-            message: 'Forbidden: insufficient permissions',
+            message: 'Target user could not be resolved for priority check',
           });
         }
-        const targetUserRole = targetUser.role as any;
-        const targetUserPriority = targetUserRole.priority;
 
-        if (targetUserPriority >= userSession.priority) {
+        const targetUser = await User.findById(ownerId).populate<{
+          role: IRole;
+        }>('role');
+
+        // STEP 8:
+        // If target user or role missing
+        if (!targetUser?.role) {
           return res.status(403).json({
             success: false,
-            message: 'Forbidden: insufficient permissions',
+            message: 'Target user or role not found',
+          });
+        }
+
+        // STEP 9:
+        // Compare role priorities
+        // Current user must have HIGHER priority
+        if (targetUser.role.priority >= userSession.priority) {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden: insufficient priority',
           });
         }
       }
+
       next();
     } catch (error) {
       next(error);
